@@ -1,38 +1,38 @@
 #!/usr/bin/env node
-import { Command } from "commander";
+
+import { program } from "commander";
+import axios from "axios";
 import fs from "fs-extra";
 import path from "path";
-import axios from "axios";
 import chalk from "chalk";
-import { fileURLToPath } from "url";
 
-const program = new Command();
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const GITHUB_REPO = "Rajat22UEE/yupcha-components";
+const BASE_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/components/`;
 
-// Define the central component registry URL
-const REGISTRY_URL = "https://raw.githubusercontent.com/your-repo/yupcha-components/main";
-
-// Function to install a component
-const installComponent = async (componentName) => {
-  const componentUrl = `${REGISTRY_URL}/${componentName}.tsx`;
-  const destinationPath = path.join(process.cwd(), "components/ui", `${componentName}.tsx`);
-
-  console.log(chalk.blue(`Fetching ${componentName} from the registry...`));
+// Fetch Component Function
+async function fetchComponent(componentName) {
+  const url = `${BASE_URL}${componentName}.tsx`; // Change extension if needed
+  const outputPath = path.join(process.cwd(), "components/ui", `${componentName}.tsx`);
 
   try {
-    const { data } = await axios.get(componentUrl);
-    await fs.outputFile(destinationPath, data);
-    console.log(chalk.green(`✔ Installed "${componentName}" in components/ui/`));
-  } catch (error) {
-    console.error(chalk.red(`❌ Error: Component "${componentName}" not found.`));
-    console.error(chalk.yellow("Make sure the component exists in the registry."));
-  }
-};
+    console.log(chalk.blue(`📥 Fetching ${componentName} from Yupcha Registry...`));
+    const { data } = await axios.get(url);
 
-// CLI commands
+    // Ensure the directory exists
+    await fs.ensureDir(path.dirname(outputPath));
+
+    // Write the component file
+    await fs.writeFile(outputPath, data);
+    console.log(chalk.green(`✅ ${componentName}.tsx downloaded successfully!`));
+  } catch (error) {
+    console.error(chalk.red(`❌ Failed to fetch ${componentName}: ${error.response?.status === 404 ? "Component not found." : error.message}`));
+  }
+}
+
+// Setup CLI Commands
 program
-  .command("add <component>")
-  .description("Fetch and install a component into your project")
-  .action(installComponent);
+  .command("install <component>")
+  .description("Fetch a UI component from the Yupcha registry")
+  .action(fetchComponent);
 
 program.parse(process.argv);

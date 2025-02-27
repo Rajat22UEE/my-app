@@ -1,35 +1,44 @@
 #!/usr/bin/env node
 
-const fs = require("fs");
-const path = require("path");
-const { program } = require("commander");
-const chalk = require("chalk");
+import { Command } from "commander";
+import fs from "fs-extra";
+import path from "path";
+import chalk from "chalk";
 
-const BUTTON_TEMPLATE = (variant, size) => `
-import React from "react";
-import { Button } from "../ui/button";
+const program = new Command();
+const buttonCode = `import React from "react";
+import { cn } from "@/lib/utils";
 
-const ${variant.charAt(0).toUpperCase() + variant.slice(1)}${size.charAt(0).toUpperCase() + size.slice(1)}Button = () => {
-  return <Button variant="${variant}" size="${size}">Click me</Button>;
+const buttonVariants = {
+  default: "bg-primary text-white px-4 py-2 rounded-md",
+  destructive: "bg-red-500 text-white px-4 py-2 rounded-md",
+  outline: "border border-gray-300 px-4 py-2 rounded-md",
+  secondary: "bg-gray-500 text-white px-4 py-2 rounded-md",
+  ghost: "text-gray-700 px-4 py-2",
+  link: "text-blue-500 underline",
 };
 
-export default ${variant.charAt(0).toUpperCase() + variant.slice(1)}${size.charAt(0).toUpperCase() + size.slice(1)}Button;
+const Button = ({ variant = "default", className, ...props }) => {
+  return (
+    <button className={cn(buttonVariants[variant], className)} {...props} />
+  );
+};
+
+export { Button };
 `;
 
 program
-  .command("add <variant> <size>")
-  .description("Generate a new button component with the specified variant and size")
-  .action((variant, size) => {
-    const fileName = `${variant}-${size}.jsx`;
-    const filePath = path.join(__dirname, "../../registry/example", fileName);
+  .command("add button")
+  .description("Generates components/ui/button.jsx in the user's project")
+  .action(() => {
+    const targetPath = path.resolve(process.cwd(), "components/ui/button.jsx");
 
-    if (fs.existsSync(filePath)) {
-      console.log(chalk.red(`❌ Button ${fileName} already exists.`));
-      return;
+    if (!fs.existsSync(path.dirname(targetPath))) {
+      fs.mkdirSync(path.dirname(targetPath), { recursive: true });
     }
 
-    fs.writeFileSync(filePath, BUTTON_TEMPLATE(variant, size));
-    console.log(chalk.green(`✅ Button ${fileName} created in registry/example/`));
+    fs.writeFileSync(targetPath, buttonCode);
+    console.log(chalk.green(`✅ Button component generated at ${targetPath}`));
   });
 
 program.parse(process.argv);

@@ -1,60 +1,35 @@
 #!/usr/bin/env node
 
-import { program } from "commander";
-import fs from "fs-extra";
-import path from "path";
-import chalk from "chalk";
+const fs = require("fs");
+const path = require("path");
+const { program } = require("commander");
+const chalk = require("chalk");
 
-const exampleComponent = `
-import { Button } from "@/components/ui/button";
+const BUTTON_TEMPLATE = (variant, size) => `
+import React from "react";
+import { Button } from "../ui/button";
 
-export default function ExampleButton() {
-  return (
-    <div className="flex gap-4">
-      <Button variant="default" size="default">Default</Button>
-      <Button variant="destructive" size="lg">Destructive</Button>
-      <Button variant="outline" size="sm">Outline</Button>
-      <Button variant="secondary" size="icon">Icon</Button>
-    </div>
-  );
-}
+const ${variant.charAt(0).toUpperCase() + variant.slice(1)}${size.charAt(0).toUpperCase() + size.slice(1)}Button = () => {
+  return <Button variant="${variant}" size="${size}">Click me</Button>;
+};
+
+export default ${variant.charAt(0).toUpperCase() + variant.slice(1)}${size.charAt(0).toUpperCase() + size.slice(1)}Button;
 `;
 
 program
-  .version("1.0.0")
-  .description("CLI tool to help you use buttons in your Next.js project");
+  .command("add <variant> <size>")
+  .description("Generate a new button component with the specified variant and size")
+  .action((variant, size) => {
+    const fileName = `${variant}-${size}.jsx`;
+    const filePath = path.join(__dirname, "../../registry/example", fileName);
 
-// Show usage instructions
-program
-  .command("usage")
-  .description("Show how to use the Button component")
-  .action(() => {
-    console.log(chalk.green("\n📌 Usage of the Button Component:\n"));
-    console.log(chalk.blue(`import { Button } from "@/components/ui/button";`));
-    console.log(`
-Example:
-<Button variant="default" size="default">Click Me</Button>
-
-Available Variants: default, destructive, outline, secondary, ghost, link
-Available Sizes: default, sm, lg, icon
-    `);
-    console.log(chalk.yellow("\nRun 'button-cli example' to generate an example component.\n"));
-  });
-
-// Generate an example component
-program
-  .command("example")
-  .description("Generate an example button component")
-  .action(() => {
-    const examplePath = path.join(process.cwd(), "apps/www/registry/default/example/ExampleButton.jsx");
-    
-    if (fs.existsSync(examplePath)) {
-      console.log(chalk.red("⚠️ ExampleButton.jsx already exists!"));
-    } else {
-      fs.ensureFileSync(examplePath);
-      fs.writeFileSync(examplePath, exampleComponent, "utf8");
-      console.log(chalk.green(`✅ ExampleButton.jsx created at ${examplePath}`));
+    if (fs.existsSync(filePath)) {
+      console.log(chalk.red(`❌ Button ${fileName} already exists.`));
+      return;
     }
+
+    fs.writeFileSync(filePath, BUTTON_TEMPLATE(variant, size));
+    console.log(chalk.green(`✅ Button ${fileName} created in registry/example/`));
   });
 
 program.parse(process.argv);

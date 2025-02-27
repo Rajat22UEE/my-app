@@ -3,13 +3,12 @@
     "version": "1.0.0",
     "description": "CLI tool for managing buttons",
     "bin": {
-      "button-cli": "./bin/index.js"
+        "button-cli": "./bin/index.js"
     },
     "type": "module",
     "dependencies": {
-      "chalk": "^5.4.1",
-      "commander": "^13.1.0",
-      "fs-extra": "^11.3.0"
+        "chalk": "^5.4.1",
+        "commander": "^13.1.0",
+        "fs-extra": "^11.3.0"
     }
-  }
-  
+}
